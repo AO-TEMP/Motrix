@@ -164,6 +164,7 @@ npm run build
 
 | Key   | Name                | Status       |
 |-------|:--------------------|:-------------|
+| bg    | Българският език    | ✔️ [@null-none](https://github.com/null-none) |
 | ca    | Català              | ✔️ [@marcizhu](https://github.com/marcizhu) |
 | de    | Deutsch             | ✔️ [@Schloemicher](https://github.com/Schloemicher) |
 | en-US | English             | ✔️           |
@@ -176,6 +177,7 @@ npm run build
 | ru    | Русский             | ✔️ [@bladeaweb](https://github.com/bladeaweb) |
 | tr    | Türkçe              | ✔️ [@abdullah](https://github.com/abdullah) |
 | uk    | Українська          | ✔️ [@bladeaweb](https://github.com/bladeaweb) |
+| vi    | Tiếng Việt          | ✔️ [@duythanhvn](https://github.com/duythanhvn) |
 | zh-CN | 简体中文             | ✔️           |
 | zh-TW | 繁體中文             | ✔️ [@Yukaii](https://github.com/Yukaii) |
 

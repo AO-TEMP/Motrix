@@ -105,6 +105,14 @@ export default class WindowManager extends EventEmitter {
       }
     })
 
+    window.on('enter-full-screen', () => {
+      this.emit('enter-full-screen', window)
+    })
+
+    window.on('leave-full-screen', () => {
+      this.emit('leave-full-screen', window)
+    })
+
     this.handleWindowState(page, window)
 
     this.handleWindowClose(pageOptions, page, window)
@@ -169,7 +177,15 @@ export default class WindowManager extends EventEmitter {
     window.on('close', (event) => {
       if (pageOptions.bindCloseToHide && !this.willQuit) {
         event.preventDefault()
-        window.hide()
+
+        // @see https://github.com/electron/electron/issues/20263
+        if (window.isFullScreen()) {
+          window.once('leave-full-screen', () => window.hide())
+
+          window.setFullScreen(false)
+        } else {
+          window.hide()
+        }
       }
       const bounds = window.getBounds()
       this.emit('window-closed', { page, bounds })
@@ -178,15 +194,16 @@ export default class WindowManager extends EventEmitter {
 
   showWindow (page) {
     const window = this.getWindow(page)
-    if (!window) {
+    if (!window || window.isVisible()) {
       return
     }
+
     window.show()
   }
 
-  autoHideWindow (page) {
+  hideWindow (page) {
     const window = this.getWindow(page)
-    if (!window) {
+    if (!window || !window.isVisible()) {
       return
     }
     window.hide()
@@ -203,10 +220,11 @@ export default class WindowManager extends EventEmitter {
     if (!window) {
       return
     }
-    if (window.isVisible()) {
-      window.hide()
-    } else {
+
+    if (!window.isVisible() || window.isFullScreen()) {
       window.show()
+    } else {
+      window.hide()
     }
   }
 

@@ -1,3 +1,4 @@
+import appLocaleBg from '@shared/locales/bg'
 import appLocaleCa from '@shared/locales/ca'
 import appLocaleDe from '@shared/locales/de'
 import appLocaleEnUS from '@shared/locales/en-US'
@@ -9,6 +10,7 @@ import appLocaleKo from '@shared/locales/ko'
 import appLocalePtBR from '@shared/locales/pt-BR'
 import appLocaleRu from '@shared/locales/ru'
 import appLocaleTr from '@shared/locales/tr'
+import appLocaleVi from '@shared/locales/vi'
 import appLocaleZhCN from '@shared/locales/zh-CN'
 import appLocaleZhTW from '@shared/locales/zh-TW'
 import appLocaleUk from '@shared/locales/uk'
@@ -71,6 +73,11 @@ const resources = {
       ...appLocaleTr
     }
   },
+  'vi': {
+    translation: {
+      ...appLocaleVi
+    }
+  },
   'zh-CN': {
     translation: {
       ...appLocaleZhCN
@@ -84,6 +91,11 @@ const resources = {
   'uk': {
     translation: {
       ...appLocaleUk
+    }
+  },
+  'bg': {
+    translation: {
+      ...appLocaleBg
     }
   }
 }

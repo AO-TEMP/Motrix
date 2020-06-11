@@ -7,6 +7,10 @@
  */
 export const availableLanguages = [
   {
+    value: 'bg',
+    label: 'Българският език'
+  },
+  {
     value: 'ca',
     label: 'Català'
   },
@@ -53,6 +57,10 @@ export const availableLanguages = [
   {
     value: 'tr',
     label: 'Türkçe'
+  },
+  {
+    value: 'vi',
+    label: 'Tiếng Việt'
   },
   {
     value: 'zh-CN',

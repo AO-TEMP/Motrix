@@ -1,12 +1,14 @@
-import { app } from 'electron'
+import { app, nativeTheme } from 'electron'
 import is from 'electron-is'
 import { resolve } from 'path'
 import { existsSync, lstatSync } from 'fs'
 
 import {
+  APP_THEME,
   ENGINE_MAX_CONNECTION_PER_SERVER,
   IP_VERSION
 } from '@shared/constants'
+
 import logger from '../core/Logger'
 import engineBinMap from '../configs/engine'
 
@@ -100,13 +102,13 @@ export function parseArgvAsUrl (argv) {
 export function checkIsSupportedSchema (url = '') {
   const str = url.toLowerCase()
   if (
-    str.startsWith('mo:') ||
-    str.startsWith('motrix:') ||
+    str.startsWith('ftp:') ||
     str.startsWith('http:') ||
     str.startsWith('https:') ||
-    str.startsWith('ftp:') ||
     str.startsWith('magnet:') ||
-    str.startsWith('thunder:')
+    str.startsWith('thunder:') ||
+    str.startsWith('mo:') ||
+    str.startsWith('motrix:')
   ) {
     return true
   } else {
@@ -132,4 +134,10 @@ export function parseArgvAsFile (argv) {
 
 export const getMaxConnectionPerServer = () => {
   return ENGINE_MAX_CONNECTION_PER_SERVER
+}
+
+export const getSystemTheme = () => {
+  let result = APP_THEME.LIGHT
+  result = nativeTheme.shouldUseDarkColors ? APP_THEME.DARK : APP_THEME.LIGHT
+  return result
 }
