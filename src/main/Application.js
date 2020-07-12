@@ -7,7 +7,7 @@ import { isEmpty } from 'lodash'
 
 import logger from './core/Logger'
 import ConfigManager from './core/ConfigManager'
-import { setupLocaleManager } from '@/ui/Locale'
+import { setupLocaleManager } from './ui/Locale'
 import Engine from './core/Engine'
 import EngineClient from './core/EngineClient'
 import UPnPManager from './core/UPnPManager'
@@ -78,6 +78,8 @@ export default class Application extends EventEmitter {
 
     this.handleIpcMessages()
 
+    this.handleIpcInvokes()
+
     this.emit('application:initialized')
   }
 
@@ -143,7 +145,34 @@ export default class Application extends EventEmitter {
 
   initTrayManager () {
     this.trayManager = new TrayManager({
-      theme: this.configManager.getUserConfig('tray-theme')
+      theme: this.configManager.getUserConfig('tray-theme'),
+      systemTheme: this.themeManager.getSystemTheme(),
+      speedometer: this.configManager.getUserConfig('tray-speedometer')
+    })
+
+    this.watchTraySpeedometerEnabledChange()
+
+    this.trayManager.on('mouse-down', ({ focused }) => {
+      this.sendCommandToAll('application:update-tray-focused', { focused })
+    })
+
+    this.trayManager.on('mouse-up', ({ focused }) => {
+      this.sendCommandToAll('application:update-tray-focused', { focused })
+    })
+
+    this.trayManager.on('drop-files', (files = []) => {
+      this.handleFile(files[0])
+    })
+
+    this.trayManager.on('drop-text', (text) => {
+      this.handleProtocol(text)
+    })
+  }
+
+  watchTraySpeedometerEnabledChange () {
+    this.configManager.userConfig.onDidChange('tray-speedometer', async (newValue, oldValue) => {
+      logger.info('[Motrix] detected tray speedometer value change event:', newValue, oldValue)
+      this.trayManager.handleSpeedometerEnableChange(newValue)
     })
   }
 
@@ -156,12 +185,12 @@ export default class Application extends EventEmitter {
   initUPnPManager () {
     this.upnp = new UPnPManager()
 
-    this.watchEnableUPnPChange()
+    this.watchUPnPEnabledChange()
 
-    this.watchPortsChange()
+    this.watchUPnPPortsChange()
 
-    const enable = this.configManager.getUserConfig('enable-upnp')
-    if (!enable) {
+    const enabled = this.configManager.getUserConfig('enable-upnp')
+    if (!enabled) {
       return
     }
 
@@ -177,7 +206,7 @@ export default class Application extends EventEmitter {
       this.upnp.map(dhtPort)
     ]
     try {
-      await Promise.all(promises)
+      await Promise.allSettled(promises)
     } catch (e) {
       logger.warn('[Motrix] start UPnP mapping fail', e)
     }
@@ -192,13 +221,13 @@ export default class Application extends EventEmitter {
       this.upnp.unmap(dhtPort)
     ]
     try {
-      await Promise.all(promises)
+      await Promise.allSettled(promises)
     } catch (e) {
       logger.warn('[Motrix] stop UPnP mapping fail', e)
     }
   }
 
-  watchPortsChange () {
+  watchUPnPPortsChange () {
     const watchKeys = ['listen-port', 'dht-listen-port']
 
     watchKeys.map((key) => {
@@ -214,7 +243,7 @@ export default class Application extends EventEmitter {
           this.upnp.map(newValue)
         ]
         try {
-          await Promise.all(promises)
+          await Promise.allSettled(promises)
         } catch (e) {
           logger.info('[Motrix] change UPnP port mapping failed:', e)
         }
@@ -222,7 +251,7 @@ export default class Application extends EventEmitter {
     })
   }
 
-  watchEnableUPnPChange () {
+  watchUPnPEnabledChange () {
     this.configManager.userConfig.onDidChange('enable-upnp', async (newValue, oldValue) => {
       logger.info('[Motrix] detected enable-upnp value change event:', newValue, oldValue)
       if (newValue) {
@@ -409,8 +438,8 @@ export default class Application extends EventEmitter {
   initThemeManager () {
     this.themeManager = new ThemeManager()
     this.themeManager.on('system-theme-change', (theme) => {
-      this.trayManager.changeIconTheme(theme)
-      this.sendCommandToAll('application:update-system-theme', theme)
+      this.trayManager.handleSystemThemeChange(theme)
+      this.sendCommandToAll('application:update-system-theme', { theme })
     })
   }
 
@@ -423,10 +452,6 @@ export default class Application extends EventEmitter {
   }
 
   initProtocolManager () {
-    if (is.dev() || is.mas()) {
-      return
-    }
-
     const protocols = this.configManager.getUserConfig('protocols', {})
     this.protocolManager = new ProtocolManager({
       protocols
@@ -434,10 +459,6 @@ export default class Application extends EventEmitter {
   }
 
   handleProtocol (url) {
-    if (is.dev() || is.mas()) {
-      return
-    }
-
     this.show()
 
     this.protocolManager.handle(url)
@@ -454,15 +475,17 @@ export default class Application extends EventEmitter {
 
     this.show()
 
-    const fileName = basename(filePath)
+    const name = basename(filePath)
     readFile(filePath, (err, data) => {
       if (err) {
         logger.warn(`[Motrix] read file error: ${filePath}`, err.message)
         return
       }
-      const file = Buffer.from(data).toString('base64')
-      const args = [fileName, file]
-      this.sendCommandToAll('application:new-bt-task-with-file', ...args)
+      const dataURL = Buffer.from(data).toString('base64')
+      this.sendCommandToAll('application:new-bt-task-with-file', {
+        name,
+        dataURL
+      })
     })
   }
 
@@ -471,10 +494,10 @@ export default class Application extends EventEmitter {
       return
     }
 
-    const enable = this.configManager.getUserConfig('auto-check-update')
+    const enabled = this.configManager.getUserConfig('auto-check-update')
     const lastTime = this.configManager.getUserConfig('last-check-update-time')
     this.updateManager = new UpdateManager({
-      autoCheck: checkIsNeedRun(enable, lastTime, AUTO_CHECK_UPDATE_INTERVAL)
+      autoCheck: checkIsNeedRun(enabled, lastTime, AUTO_CHECK_UPDATE_INTERVAL)
     })
     this.handleUpdaterEvents()
   }
@@ -537,6 +560,10 @@ export default class Application extends EventEmitter {
   handleCommands () {
     this.on('application:save-preference', this.savePreference)
 
+    this.on('application:update-tray', (tray) => {
+      this.trayManager.updateTrayByImage(tray)
+    })
+
     this.on('application:relaunch', () => {
       this.relaunch()
     })
@@ -557,11 +584,11 @@ export default class Application extends EventEmitter {
       }
     })
 
-    this.on('application:show', (page) => {
+    this.on('application:show', ({ page }) => {
       this.show(page)
     })
 
-    this.on('application:hide', (page) => {
+    this.on('application:hide', ({ page }) => {
       this.hide(page)
     })
 
@@ -576,14 +603,14 @@ export default class Application extends EventEmitter {
 
     this.on('application:change-theme', (theme) => {
       this.themeManager.updateAppAppearance(theme)
-      this.sendCommandToAll('application:update-theme', theme)
+      this.sendCommandToAll('application:update-theme', { theme })
     })
 
     this.on('application:change-locale', (locale) => {
       this.localeManager.changeLanguageByLocale(locale)
         .then(() => {
-          this.trayManager.setup(locale)
           this.menuManager.handleLocaleChange(locale)
+          this.trayManager.handleLocaleChange(locale)
         })
     })
 
@@ -663,7 +690,7 @@ export default class Application extends EventEmitter {
   }
 
   handleConfigChange (configName) {
-    this.sendCommandToAll('application:update-preference-config', configName)
+    this.sendCommandToAll('application:update-preference-config', { configName })
   }
 
   handleEvents () {
@@ -679,7 +706,7 @@ export default class Application extends EventEmitter {
     this.configManager.systemConfig.onDidAnyChange(() => this.handleConfigChange('system'))
 
     this.on('download-status-change', (downloading) => {
-      this.trayManager.updateTrayByStatus(downloading)
+      this.trayManager.handleDownloadStatusChange(downloading)
       if (downloading) {
         this.energyManager.startPowerSaveBlocker()
       } else {
@@ -687,8 +714,9 @@ export default class Application extends EventEmitter {
       }
     })
 
-    this.on('download-speed-change', (speed) => {
-      this.dockManager.setBadge(speed)
+    this.on('speed-change', (speed) => {
+      this.dockManager.handleSpeedChange(speed)
+      this.trayManager.handleSpeedChange(speed)
     })
 
     this.on('task-download-complete', (task, path) => {
@@ -705,6 +733,19 @@ export default class Application extends EventEmitter {
     ipcMain.on('event', (event, eventName, ...args) => {
       logger.log('[Motrix] ipc receive event', eventName, ...args)
       this.emit(eventName, ...args)
+    })
+  }
+
+  handleIpcInvokes () {
+    ipcMain.handle('get-app-config', async () => {
+      const systemConfig = this.configManager.getSystemConfig()
+      const userConfig = this.configManager.getUserConfig()
+
+      const result = {
+        ...systemConfig,
+        ...userConfig
+      }
+      return result
     })
   }
 }

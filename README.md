@@ -1,7 +1,7 @@
 # Motrix
 
 <a href="https://motrix.app">
-  <img src="https://cdn.nlark.com/yuque/0/2018/png/129147/1543735425232-a5d2c99f-d788-43e4-9781-558ff6d21027.png" width="256" alt="App Icon" />
+  <img src="./static/512x512.png" width="256" alt="App Icon" />
 </a>
 
 ## A full-featured download manager
@@ -167,6 +167,7 @@ Translations into versions for other languages are welcome 🧐! Please read the
 | id    | Indonesia           | ✔️ [@aarestu](https://github.com/aarestu) |
 | ja    | 日本語               | ✔️ [@hbkrkzk](https://github.com/hbkrkzk) |
 | ko    | 한국어                | ✔️ [@KOZ39](https://github.com/KOZ39) |
+| pl    | Polski              |     [@KanarekLife](https://github.com/KanarekLife) |
 | pt-BR | Portuguese (Brazil) | ✔️ [@andrenoberto](https://github.com/andrenoberto) |
 | ru    | Русский             | ✔️ [@bladeaweb](https://github.com/bladeaweb) |
 | tr    | Türkçe              | ✔️ [@abdullah](https://github.com/abdullah) |

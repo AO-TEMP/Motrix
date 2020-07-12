@@ -37,8 +37,14 @@
               {{ $t('preferences.auto-hide-window') }}
             </el-checkbox>
           </el-col>
+          <el-col v-if="isMac" class="form-item-sub" :span="16">
+            <el-checkbox v-model="form.traySpeedometer">
+              {{ $t('preferences.tray-speedometer') }}
+            </el-checkbox>
+          </el-col>
         </el-form-item>
         <el-form-item
+          v-if="isMac"
           :label="`${$t('preferences.run-mode')}: `"
           :label-width="formLabelWidth"
         >
@@ -209,7 +215,6 @@
   import ThemeSwitcher from '@/components/Preference/ThemeSwitcher'
   import { availableLanguages, getLanguage } from '@shared/locales'
   import { getLocaleManager } from '@/components/Locale'
-  import { prettifyDir } from '@/utils/native'
   import {
     calcFormLabelWidth,
     checkIsNeedRestart,
@@ -217,7 +222,7 @@
   } from '@shared/utils'
   import { APP_RUN_MODE } from '@shared/constants'
 
-  const initialForm = (config) => {
+  const initForm = (config) => {
     const {
       autoHideWindow,
       dir,
@@ -235,7 +240,8 @@
       resumeAllWhenAppLaunched,
       runMode,
       taskNotification,
-      theme
+      theme,
+      traySpeedometer
     } = config
     const result = {
       autoHideWindow,
@@ -255,7 +261,8 @@
       resumeAllWhenAppLaunched,
       runMode,
       taskNotification,
-      theme
+      theme,
+      traySpeedometer
     }
     return result
   }
@@ -269,7 +276,7 @@
     },
     data () {
       const { locale } = this.$store.state.preference.config
-      const form = initialForm(this.$store.state.preference.config)
+      const form = initForm(this.$store.state.preference.config)
       const formOriginal = cloneDeep(form)
 
       return {
@@ -282,6 +289,7 @@
     },
     computed: {
       isRenderer: () => is.renderer(),
+      isMac: () => is.macOS(),
       isMas: () => is.mas(),
       isLinux () { return is.linux() },
       title () {
@@ -353,9 +361,6 @@
       showHideAppMenuOption () {
         return is.windows() || is.linux()
       },
-      downloadDir () {
-        return prettifyDir(this.form.dir)
-      },
       ...mapState('preference', {
         config: state => state.config
       })
@@ -369,7 +374,6 @@
       },
       handleThemeChange (theme) {
         this.form.theme = theme
-        // this.$store.dispatch('preference/changeThemeConfig', theme)
         this.$electron.ipcRenderer.send('command',
                                         'application:change-theme', theme)
       },
@@ -379,7 +383,7 @@
       syncFormConfig () {
         this.$store.dispatch('preference/fetchPreference')
           .then((config) => {
-            this.form = initialForm(config)
+            this.form = initForm(config)
             this.formOriginal = cloneDeep(this.form)
           })
       },

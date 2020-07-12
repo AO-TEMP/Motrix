@@ -213,8 +213,8 @@
       },
       batchDeleteTaskFiles (taskList) {
         const promises = taskList.map((task, index) => delayDeleteTaskFiles(task, index * 200))
-        Promise.all(promises).then(values => {
-          console.log('[Motrix] batch delete task files: ', values)
+        Promise.allSettled(promises).then(results => {
+          console.log('[Motrix] batch delete task files: ', results)
         })
       },
       removeTaskItems (gids) {
@@ -252,6 +252,10 @@
       handleStopTaskSeeding (payload) {
         const { task } = payload
         this.$store.dispatch('task/stopSeeding', task)
+        this.$msg.info({
+          message: this.$t('task.bt-stopping-seeding-tip'),
+          duration: 8000
+        })
       },
       handleRestartTask (payload) {
         const { task, taskName, showDialog } = payload
