@@ -19,6 +19,10 @@ export const availableLanguages = [
     label: 'Deutsch'
   },
   {
+    value: 'el',
+    label: 'Ελληνικά'
+  },
+  {
     value: 'en-US',
     label: 'English'
   },
@@ -35,8 +39,16 @@ export const availableLanguages = [
     label: 'Français'
   },
   {
+    value: 'hu',
+    label: 'Hungarian'
+  },
+  {
     value: 'id',
     label: 'Indonesia'
+  },
+  {
+    value: 'it',
+    label: 'Italiano'
   },
   {
     value: 'ja',

@@ -161,10 +161,14 @@ Translations into versions for other languages are welcome 🧐! Please read the
 | bg    | Българският език    | ✔️ [@null-none](https://github.com/null-none) |
 | ca    | Català              | ✔️ [@marcizhu](https://github.com/marcizhu) |
 | de    | Deutsch             | ✔️ [@Schloemicher](https://github.com/Schloemicher) |
+| el    | Ελληνικά            |    [@Likecinema](https://github.com/Likecinema) |
 | en-US | English             | ✔️           |
+| es    | Español             | ✔️ [@Chofito](https://github.com/Chofito)|
 | fa    | فارسی               | ✔️ [@Nima-Ra](https://github.com/Nima-Ra) |
 | fr    | Français            | ✔️ [@gpatarin](https://github.com/gpatarin) |
+| hu    | Hungarian           |     [@zalnaRs](https://github.com/zalnaRs) |
 | id    | Indonesia           | ✔️ [@aarestu](https://github.com/aarestu) |
+| it    | Italiano            |    [@blackcat-917](https://github.com/blackcat-917) |
 | ja    | 日本語               | ✔️ [@hbkrkzk](https://github.com/hbkrkzk) |
 | ko    | 한국어                | ✔️ [@KOZ39](https://github.com/KOZ39) |
 | pl    | Polski              |     [@KanarekLife](https://github.com/KanarekLife) |

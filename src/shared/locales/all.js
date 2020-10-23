@@ -1,11 +1,14 @@
 import eleLocaleBg from 'element-ui/lib/locale/lang/bg'
 import eleLocaleCa from 'element-ui/lib/locale/lang/ca'
 import eleLocaleDe from 'element-ui/lib/locale/lang/de'
+import eleLocaleEl from 'element-ui/lib/locale/lang/el'
 import eleLocaleEn from 'element-ui/lib/locale/lang/en'
 import eleLocaleEs from 'element-ui/lib/locale/lang/es'
 import eleLocaleFa from 'element-ui/lib/locale/lang/fa'
 import eleLocaleFr from 'element-ui/lib/locale/lang/fr'
+import eleLocaleHu from 'element-ui/lib/locale/lang/hu'
 import eleLocaleId from 'element-ui/lib/locale/lang/id'
+import elelocaleIt from 'element-ui/lib/locale/lang/it'
 import eleLocaleJa from 'element-ui/lib/locale/lang/ja'
 import eleLocaleKo from 'element-ui/lib/locale/lang/ko'
 import eleLocalePl from 'element-ui/lib/locale/lang/pl'
@@ -19,11 +22,14 @@ import eleLocaleUk from 'element-ui/lib/locale/lang/ua'
 import appLocaleBg from '@shared/locales/bg'
 import appLocaleCa from '@shared/locales/ca'
 import appLocaleDe from '@shared/locales/de'
+import appLocaleEl from '@shared/locales/el'
 import appLocaleEnUS from '@shared/locales/en-US'
 import appLocaleEs from '@shared/locales/es'
 import appLocaleFa from '@shared/locales/fa'
 import appLocaleFr from '@shared/locales/fr'
+import appLocaleHu from '@shared/locales/hu'
 import appLocaleId from '@shared/locales/id'
+import applocaleIt from '@shared/locales/it'
 import appLocaleJa from '@shared/locales/ja'
 import appLocaleKo from '@shared/locales/ko'
 import appLocalePl from '@shared/locales/pl'
@@ -50,6 +56,12 @@ const resources = {
       ...appLocaleDe
     }
   },
+  'el': {
+    translation: {
+      ...eleLocaleEl,
+      ...appLocaleEl
+    }
+  },
   'en-US': {
     translation: {
       ...eleLocaleEn,
@@ -74,10 +86,22 @@ const resources = {
       ...appLocaleFr
     }
   },
+  'hu': {
+    translation: {
+      ...eleLocaleHu,
+      ...appLocaleHu
+    }
+  },
   'id': {
     translation: {
       ...eleLocaleId,
       ...appLocaleId
+    }
+  },
+  'it': {
+    translation: {
+      ...elelocaleIt,
+      ...applocaleIt
     }
   },
   'ja': {
