@@ -36,7 +36,7 @@ scoop install motrix
 The macOS users can install Motrix using `brew cask`, thanks to [PR](https://github.com/Homebrew/homebrew-cask/pull/59494) of [Mitscherlich](https://github.com/Mitscherlich).
 
 ```bash
-brew update && brew cask install motrix
+brew update && brew install --cask motrix
 ```
 
 ### Linux
@@ -117,7 +117,7 @@ git clone git@github.com:agalwood/Motrix.git
 
 ```bash
 cd Motrix
-npm install
+yarn
 ```
 
 > Error: Electron failed to install correctly, please delete node_modules/electron and try installing again
@@ -127,13 +127,13 @@ npm install
 ### Dev Mode
 
 ```bash
-npm run dev
+yarn run dev
 ```
 
 ### Build Release
 
 ```bash
-npm run build
+yarn run build
 ```
 
 After building, the application will be found in the project's `release` directory.
@@ -173,6 +173,7 @@ Translations into versions for other languages are welcome 🧐! Please read the
 | ko    | 한국어                | ✔️ [@KOZ39](https://github.com/KOZ39) |
 | pl    | Polski              |     [@KanarekLife](https://github.com/KanarekLife) |
 | pt-BR | Portuguese (Brazil) | ✔️ [@andrenoberto](https://github.com/andrenoberto) |
+| ro    | Română             | ✔️ [@alyn3d](https://github.com/alyn3d) |
 | ru    | Русский             | ✔️ [@bladeaweb](https://github.com/bladeaweb) |
 | tr    | Türkçe              | ✔️ [@abdullah](https://github.com/abdullah) |
 | uk    | Українська          | ✔️ [@bladeaweb](https://github.com/bladeaweb) |

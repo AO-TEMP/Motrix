@@ -131,6 +131,7 @@ export default class Application extends EventEmitter {
     } catch (err) {
       logger.warn('[Motrix] shutdown engine fail: ', err.message)
     } finally {
+      // no finally
     }
   }
 
@@ -230,7 +231,7 @@ export default class Application extends EventEmitter {
   watchUPnPPortsChange () {
     const watchKeys = ['listen-port', 'dht-listen-port']
 
-    watchKeys.map((key) => {
+    watchKeys.forEach((key) => {
       this.configManager.systemConfig.onDidChange(key, async (newValue, oldValue) => {
         logger.info('[Motrix] detected port change event:', key, newValue, oldValue)
         const enable = this.configManager.getUserConfig('enable-upnp')
@@ -281,10 +282,18 @@ export default class Application extends EventEmitter {
       return
     }
 
+    const source = this.configManager.getUserConfig('tracker-source')
+    if (isEmpty(source)) {
+      return
+    }
+
     setTimeout(() => {
-      const source = this.configManager.getUserConfig('tracker-source')
       fetchBtTrackerFromSource(source).then((data) => {
         logger.warn('[Motrix] auto sync tracker data:', data)
+        if (!data || data.length === 0) {
+          return
+        }
+
         const tracker = convertTrackerDataToComma(data)
         this.savePreference({
           system: {

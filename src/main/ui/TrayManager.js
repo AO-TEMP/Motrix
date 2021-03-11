@@ -4,7 +4,7 @@ import { Tray, Menu, nativeImage } from 'electron'
 import is from 'electron-is'
 
 import { APP_THEME } from '@shared/constants'
-import { getInverseTheme } from '@shared/utils'
+import { getInverseTheme, getSystemMajorVersion } from '@shared/utils'
 import { getI18n } from './Locale'
 import {
   translateTemplate,
@@ -26,6 +26,7 @@ export default class TrayManager extends EventEmitter {
 
     this.systemTheme = options.systemTheme
     this.inverseSystemTheme = getInverseTheme(this.systemTheme)
+    this.bigSur = platform === 'darwin' && getSystemMajorVersion() >= 20
 
     this.speedometer = options.speedometer
 
@@ -76,18 +77,25 @@ export default class TrayManager extends EventEmitter {
   }
 
   loadImagesForMacOS () {
-    const { systemTheme, inverseSystemTheme } = this
+    if (this.bigSur) {
+      const {
+        systemTheme,
+        inverseSystemTheme
+      } = this
 
-    this.normalIcon = this.getFromCacheOrCreateImage(`mo-tray-${systemTheme}-normal.png`)
-    this.activeIcon = this.getFromCacheOrCreateImage(`mo-tray-${systemTheme}-active.png`)
+      this.normalIcon = this.getFromCacheOrCreateImage(`mo-tray-${systemTheme}-normal.png`)
+      this.activeIcon = this.getFromCacheOrCreateImage(`mo-tray-${systemTheme}-active.png`)
 
-    // if (systemTheme === APP_THEME.DARK) {
-    //   this.inverseNormalIcon = this.normalIcon
-    //   this.inverseActiveIcon = this.activeIcon
-    // } else {
-    this.inverseNormalIcon = this.getFromCacheOrCreateImage(`mo-tray-${inverseSystemTheme}-normal.png`)
-    this.inverseActiveIcon = this.getFromCacheOrCreateImage(`mo-tray-${inverseSystemTheme}-active.png`)
-    // }
+      // if (systemTheme === APP_THEME.DARK) {
+      //   this.inverseNormalIcon = this.normalIcon
+      //   this.inverseActiveIcon = this.activeIcon
+      // } else {
+      this.inverseNormalIcon = this.getFromCacheOrCreateImage(`mo-tray-${inverseSystemTheme}-normal.png`)
+      this.inverseActiveIcon = this.getFromCacheOrCreateImage(`mo-tray-${inverseSystemTheme}-active.png`)
+      // }
+    } else {
+      this.normalIcon = this.getFromCacheOrCreateImage('mo-tray-light-normal.png')
+    }
   }
 
   loadImagesForWindows () {
@@ -118,6 +126,7 @@ export default class TrayManager extends EventEmitter {
     }
 
     file = nativeImage.createFromPath(join(__static, `./${key}`))
+    file.setTemplateImage(this.bigSur)
     this.setCache(key, file)
     return file
   }
@@ -128,24 +137,6 @@ export default class TrayManager extends EventEmitter {
 
   setCache (key, value) {
     this.cache[key] = value
-  }
-
-  loadIcon (theme, scale) {
-    const status = this.status ? 'active' : 'normal'
-    const fileName = `mo-tray-${theme}-${status}@${scale}x.png`
-    const bufferKey = `buffer-${fileName}`
-    const buffer = this.getCache(bufferKey)
-
-    if (buffer) {
-      return buffer
-    }
-
-    const image = this.getFromCacheOrCreateImage(fileName)
-    const result = image.toPNG()
-
-    this.setCache(bufferKey, result)
-
-    return result
   }
 
   buildMenu () {
@@ -192,23 +183,18 @@ export default class TrayManager extends EventEmitter {
   }
 
   handleTrayClick = (event) => {
-    event.preventDefault()
     global.application.toggle()
   }
 
   handleTrayDbClick = (event) => {
-    event.preventDefault()
     global.application.show()
   }
 
   handleTrayRightClick = (event) => {
-    event.preventDefault()
     tray.popUpContextMenu(this.menu)
   }
 
   handleTrayMouseDown = (event) => {
-    event.preventDefault()
-
     this.focused = true
     this.emit('mouse-down', {
       focused: true,
@@ -218,8 +204,6 @@ export default class TrayManager extends EventEmitter {
   }
 
   handleTrayMouseUp = (event) => {
-    event.preventDefault()
-
     this.focused = false
     this.emit('mouse-up', {
       focused: false,
@@ -229,12 +213,10 @@ export default class TrayManager extends EventEmitter {
   }
 
   handleTrayDropFiles = (event, files) => {
-    event.preventDefault()
     this.emit('drop-files', files)
   }
 
   handleTrayDropText = (event, text) => {
-    event.preventDefault()
     this.emit('drop-text', text)
   }
 
@@ -256,6 +238,10 @@ export default class TrayManager extends EventEmitter {
   }
 
   getIcons () {
+    if (this.bigSur) {
+      return { icon: this.normalIcon }
+    }
+
     const { focused, status, systemTheme } = this
 
     const icon = status ? this.activeIcon : this.normalIcon
@@ -305,16 +291,6 @@ export default class TrayManager extends EventEmitter {
     this.updateMenuStates(null, enabledStates, null)
   }
 
-  updateTrayFromDataURL (trayDataURL) {
-    const tempImage = nativeImage.createFromDataURL(trayDataURL)
-    const pngData = tempImage.toPNG()
-    const image = nativeImage.createFromBuffer(pngData, {
-      scaleFactor: 2
-    })
-
-    tray.setImage(image)
-  }
-
   handleLocaleChange (locale) {
     this.setupMenu()
   }
@@ -360,7 +336,7 @@ export default class TrayManager extends EventEmitter {
     const image = nativeImage.createFromBuffer(buffer, {
       scaleFactor: 2
     })
-
+    image.setTemplateImage(this.bigSur)
     tray.setImage(image)
   }
 
