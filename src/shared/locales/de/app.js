@@ -1,5 +1,5 @@
 export default {
-  'task-list': 'Aufgabenliste',
+  'task-list': 'Aufgaben',
   'add-task': 'Aufgabe hinzufügen',
   'about': 'Über Motrix',
   'preferences': 'Präferenzen...',
@@ -23,6 +23,8 @@ export default {
   'under-development-message': 'Entschuldigung, diese Funktion befindet sich in der Entwicklung...',
   'yes': 'Ja',
   'no': 'Nein',
+  'save': 'Speichern',
+  'reset': 'Verwerfen',
   'cancel': 'Abbrechen',
   'submit': 'Übernehmen',
   'gt1d': '> 1 Tag',

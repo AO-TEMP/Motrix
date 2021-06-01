@@ -255,6 +255,7 @@
               v-model="form.userAgent">
             </el-input>
             <el-button-group class="ua-group">
+              <el-button @click="() => changeUA('aria2')">Aria2</el-button>
               <el-button @click="() => changeUA('transmission')">Transmission</el-button>
               <el-button @click="() => changeUA('chrome')">Chrome</el-button>
               <el-button @click="() => changeUA('du')">du</el-button>
@@ -305,6 +306,9 @@
             </el-input>
           </el-col>
           <el-col class="form-item-sub" :span="24">
+            <el-button plain type="warning" @click="() => onSessionResetClick()">
+              {{ $t('preferences.session-reset') }}
+            </el-button>
             <el-button plain type="danger" @click="() => onFactoryResetClick()">
               {{ $t('preferences.factory-reset') }}
             </el-button>
@@ -330,6 +334,7 @@
 
 <script>
   import is from 'electron-is'
+  import { dialog } from '@electron/remote'
   import { mapState } from 'vuex'
   import { cloneDeep } from 'lodash'
   import randomize from 'randomatic'
@@ -519,8 +524,25 @@
           this.hideRpcSecret = true
         }, 2000)
       },
+      onSessionResetClick () {
+        dialog.showMessageBox({
+          type: 'warning',
+          title: this.$t('preferences.session-reset'),
+          message: this.$t('preferences.session-reset-confirm'),
+          buttons: [this.$t('app.yes'), this.$t('app.no')],
+          cancelId: 1
+        }).then(({ response }) => {
+          if (response === 0) {
+            this.$store.dispatch('task/purgeTaskRecord')
+            this.$store.dispatch('task/pauseAllTask')
+              .then(() => {
+                this.$electron.ipcRenderer.send('command', 'application:reset-session')
+              })
+          }
+        })
+      },
       onFactoryResetClick () {
-        this.$electron.remote.dialog.showMessageBox({
+        dialog.showMessageBox({
           type: 'warning',
           title: this.$t('preferences.factory-reset'),
           message: this.$t('preferences.factory-reset-confirm'),
@@ -542,7 +564,7 @@
       submitForm (formName) {
         this.$refs[formName].validate((valid) => {
           if (!valid) {
-            console.log('[Motrix] preference form valid:', valid)
+            console.error('[Motrix] preference form valid:', valid)
             return false
           }
 

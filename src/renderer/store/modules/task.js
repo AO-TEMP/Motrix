@@ -1,11 +1,15 @@
 import api from '@/api'
-import { TASK_STATUS } from '@shared/constants'
-import { intersection } from '@shared/utils'
+import { EMPTY_STRING, TASK_STATUS } from '@shared/constants'
+import { checkTaskIsBT, intersection } from '@shared/utils'
 
 const state = {
   currentList: 'active',
-  taskItemInfoVisible: false,
+  taskDetailVisible: false,
+  currentTaskGid: EMPTY_STRING,
+  enabledFetchPeers: false,
   currentTaskItem: null,
+  currentTaskFiles: [],
+  currentTaskPeers: [],
   seedingList: [],
   taskList: [],
   selectedGidList: []
@@ -27,11 +31,23 @@ const mutations = {
   CHANGE_CURRENT_LIST (state, currentList) {
     state.currentList = currentList
   },
-  CHANGE_TASK_ITEM_INFO_VISIBLE (state, visible) {
-    state.taskItemInfoVisible = visible
+  CHANGE_TASK_DETAIL_VISIBLE (state, visible) {
+    state.taskDetailVisible = visible
+  },
+  UPDATE_CURRENT_TASK_GID (state, gid) {
+    state.currentTaskGid = gid
+  },
+  UPDATE_ENABLED_FETCH_PEERS (state, enabled) {
+    state.enabledFetchPeers = enabled
   },
   UPDATE_CURRENT_TASK_ITEM (state, task) {
     state.currentTaskItem = task
+  },
+  UPDATE_CURRENT_TASK_FILES (state, files) {
+    state.currentTaskFiles = files
+  },
+  UPDATE_CURRENT_TASK_PEERS (state, peers) {
+    state.currentTaskPeers = peers
   }
 }
 
@@ -65,15 +81,36 @@ const actions = {
         dispatch('updateCurrentTaskItem', data)
       })
   },
-  showTaskItemInfoDialog ({ commit, dispatch }, task) {
-    dispatch('updateCurrentTaskItem', task)
-    commit('CHANGE_TASK_ITEM_INFO_VISIBLE', true)
+  fetchItemWithPeers ({ dispatch }, gid) {
+    return api.fetchTaskItemWithPeers({ gid })
+      .then((data) => {
+        console.log('fetchItemWithPeers===>', data)
+        dispatch('updateCurrentTaskItem', data)
+      })
   },
-  hideTaskItemInfoDialog ({ commit }) {
-    commit('CHANGE_TASK_ITEM_INFO_VISIBLE', false)
+  showTaskDetail ({ commit, dispatch }, task) {
+    dispatch('updateCurrentTaskItem', task)
+    commit('UPDATE_CURRENT_TASK_GID', task.gid)
+    commit('CHANGE_TASK_DETAIL_VISIBLE', true)
+  },
+  hideTaskDetail ({ commit }) {
+    commit('CHANGE_TASK_DETAIL_VISIBLE', false)
+  },
+  toggleEnabledFetchPeers ({ commit }, enabled) {
+    commit('UPDATE_ENABLED_FETCH_PEERS', enabled)
   },
   updateCurrentTaskItem ({ commit }, task) {
     commit('UPDATE_CURRENT_TASK_ITEM', task)
+    if (task) {
+      commit('UPDATE_CURRENT_TASK_FILES', task.files)
+      commit('UPDATE_CURRENT_TASK_PEERS', task.peers)
+    } else {
+      commit('UPDATE_CURRENT_TASK_FILES', [])
+      commit('UPDATE_CURRENT_TASK_PEERS', [])
+    }
+  },
+  updateCurrentTaskGid ({ commit }, gid) {
+    commit('UPDATE_CURRENT_TASK_GID', gid)
   },
   addUri ({ dispatch }, data) {
     const { uris, outs, options } = data
@@ -111,32 +148,39 @@ const actions = {
     const { gid, options } = payload
     return api.changeOption({ gid, options })
   },
-  removeTask ({ dispatch }, task) {
+  removeTask ({ state, dispatch }, task) {
     const { gid } = task
+    if (gid === state.currentTaskGid) {
+      dispatch('hideTaskDetail')
+    }
+
     return api.removeTask({ gid })
       .finally(() => {
         dispatch('fetchList')
         dispatch('saveSession')
       })
   },
-  forcePauseTask (_, task) {
+  forcePauseTask ({ dispatch }, task) {
     const { gid, status } = task
     if (status !== TASK_STATUS.ACTIVE) {
       return Promise.resolve(true)
     }
 
     return api.forcePauseTask({ gid })
-  },
-  pauseTask ({ dispatch }, task) {
-    const { gid } = task
-    return api.pauseTask({ gid })
-      .catch(() => {
-        return api.forcePauseTask({ gid })
-      })
       .finally(() => {
         dispatch('fetchList')
         dispatch('saveSession')
       })
+  },
+  pauseTask ({ dispatch }, task) {
+    const { gid } = task
+    const isBT = checkTaskIsBT(task)
+    const promise = isBT ? api.forcePauseTask({ gid }) : api.pauseTask({ gid })
+    promise.finally(() => {
+      dispatch('fetchList')
+      dispatch('saveSession')
+    })
+    return promise
   },
   resumeTask ({ dispatch }, task) {
     const { gid } = task
@@ -185,14 +229,18 @@ const actions = {
     const list = [...seedingList.slice(0, idx), ...seedingList.slice(idx + 1)]
     commit('UPDATE_SEEDING_LIST', list)
   },
-  stopSeeding ({ dispatch }, gid) {
+  stopSeeding ({ dispatch }, { gid }) {
     const options = {
       seedTime: 0
     }
     return dispatch('changeTaskOption', { gid, options })
   },
-  removeTaskRecord ({ dispatch }, task) {
+  removeTaskRecord ({ state, dispatch }, task) {
     const { gid, status } = task
+    if (gid === state.currentTaskGid) {
+      dispatch('hideTaskDetail')
+    }
+
     const { ERROR, COMPLETE, REMOVED } = TASK_STATUS
     if ([ERROR, COMPLETE, REMOVED].indexOf(status) === -1) {
       return

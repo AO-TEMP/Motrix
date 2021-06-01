@@ -1,10 +1,20 @@
 import { EventEmitter } from 'events'
 import { app, shell, dialog, ipcMain } from 'electron'
 import is from 'electron-is'
-import { readFile } from 'fs'
+import { readFile, unlink } from 'fs'
 import { extname, basename } from 'path'
 import { isEmpty } from 'lodash'
 
+import {
+  APP_RUN_MODE,
+  AUTO_SYNC_TRACKER_INTERVAL,
+  AUTO_CHECK_UPDATE_INTERVAL
+} from '@shared/constants'
+import { checkIsNeedRun } from '@shared/utils'
+import {
+  convertTrackerDataToComma,
+  fetchBtTrackerFromSource
+} from '@shared/utils/tracker'
 import logger from './core/Logger'
 import ConfigManager from './core/ConfigManager'
 import { setupLocaleManager } from './ui/Locale'
@@ -21,16 +31,7 @@ import TouchBarManager from './ui/TouchBarManager'
 import TrayManager from './ui/TrayManager'
 import DockManager from './ui/DockManager'
 import ThemeManager from './ui/ThemeManager'
-import {
-  APP_RUN_MODE,
-  AUTO_SYNC_TRACKER_INTERVAL,
-  AUTO_CHECK_UPDATE_INTERVAL
-} from '@shared/constants'
-import { checkIsNeedRun } from '@shared/utils'
-import {
-  convertTrackerDataToComma,
-  fetchBtTrackerFromSource
-} from '@shared/utils/tracker'
+import { getSessionPath } from './utils'
 
 export default class Application extends EventEmitter {
   constructor () {
@@ -40,7 +41,7 @@ export default class Application extends EventEmitter {
   }
 
   init () {
-    this.configManager = new ConfigManager()
+    this.configManager = this.initConfigManager()
 
     this.locale = this.configManager.getLocale()
     this.localeManager = setupLocaleManager(this.locale)
@@ -81,6 +82,22 @@ export default class Application extends EventEmitter {
     this.handleIpcInvokes()
 
     this.emit('application:initialized')
+  }
+
+  initConfigManager () {
+    this.configListeners = {}
+    return new ConfigManager()
+  }
+
+  offConfigListeners () {
+    try {
+      Object.keys(this.configListeners).forEach((key) => {
+        this.configListeners[key]()
+      })
+    } catch (e) {
+      logger.warn('[Motrix] offConfigListeners===>', e)
+    }
+    this.configListeners = {}
   }
 
   setupApplicationMenu () {
@@ -171,7 +188,9 @@ export default class Application extends EventEmitter {
   }
 
   watchTraySpeedometerEnabledChange () {
-    this.configManager.userConfig.onDidChange('tray-speedometer', async (newValue, oldValue) => {
+    const { userConfig } = this.configManager
+    const key = 'tray-speedometer'
+    this.configListeners[key] = userConfig.onDidChange('tray-speedometer', async (newValue, oldValue) => {
       logger.info('[Motrix] detected tray speedometer value change event:', newValue, oldValue)
       this.trayManager.handleSpeedometerEnableChange(newValue)
     })
@@ -229,10 +248,11 @@ export default class Application extends EventEmitter {
   }
 
   watchUPnPPortsChange () {
+    const { systemConfig } = this.configManager
     const watchKeys = ['listen-port', 'dht-listen-port']
 
     watchKeys.forEach((key) => {
-      this.configManager.systemConfig.onDidChange(key, async (newValue, oldValue) => {
+      this.configListeners[key] = systemConfig.onDidChange(key, async (newValue, oldValue) => {
         logger.info('[Motrix] detected port change event:', key, newValue, oldValue)
         const enable = this.configManager.getUserConfig('enable-upnp')
         if (!enable) {
@@ -253,7 +273,9 @@ export default class Application extends EventEmitter {
   }
 
   watchUPnPEnabledChange () {
-    this.configManager.userConfig.onDidChange('enable-upnp', async (newValue, oldValue) => {
+    const { userConfig } = this.configManager
+    const key = 'enable-upnp'
+    this.configListeners[key] = userConfig.onDidChange(key, async (newValue, oldValue) => {
       logger.info('[Motrix] detected enable-upnp value change event:', newValue, oldValue)
       if (newValue) {
         this.startUPnPMapping()
@@ -535,8 +557,9 @@ export default class Application extends EventEmitter {
       win.setProgressBar(0)
     })
 
-    this.updateManager.on('will-updated', (event) => {
+    this.updateManager.on('will-updated', async (event) => {
       this.windowManager.setWillQuit(true)
+      await this.stop()
     })
 
     this.updateManager.on('update-error', (event) => {
@@ -545,10 +568,25 @@ export default class Application extends EventEmitter {
     })
   }
 
-  relaunch () {
-    this.stop()
+  async relaunch () {
+    await this.stop()
     app.relaunch()
     app.exit()
+  }
+
+  async resetSession () {
+    await this.stopEngine()
+
+    app.clearRecentDocuments()
+
+    const sessionPath = this.configManager.getUserConfig('session-path') || getSessionPath()
+    setTimeout(() => {
+      unlink(sessionPath, function (err) {
+        logger.info('[Motrix] Removed the download seesion file:', err)
+      })
+
+      this.engine.start()
+    }, 3000)
   }
 
   savePreference (config = {}) {
@@ -601,7 +639,10 @@ export default class Application extends EventEmitter {
       this.hide(page)
     })
 
+    this.on('application:reset-session', () => this.resetSession())
+
     this.on('application:reset', () => {
+      this.offConfigListeners()
       this.configManager.reset()
       this.relaunch()
     })
@@ -611,7 +652,7 @@ export default class Application extends EventEmitter {
     })
 
     this.on('application:change-theme', (theme) => {
-      this.themeManager.updateAppAppearance(theme)
+      this.themeManager.updateSystemTheme(theme)
       this.sendCommandToAll('application:update-theme', { theme })
     })
 
@@ -677,25 +718,37 @@ export default class Application extends EventEmitter {
       this.protocolManager.setup(protocols)
     })
 
+    this.on('application:open-external', (url) => {
+      this.openExternal(url)
+    })
+
     this.on('help:official-website', () => {
       const url = 'https://motrix.app/'
-      shell.openExternal(url)
+      this.openExternal(url)
     })
 
     this.on('help:manual', () => {
       const url = 'https://motrix.app/manual'
-      shell.openExternal(url)
+      this.openExternal(url)
     })
 
     this.on('help:release-notes', () => {
       const url = 'https://motrix.app/release'
-      shell.openExternal(url)
+      this.openExternal(url)
     })
 
     this.on('help:report-problem', () => {
       const url = 'https://motrix.app/report'
-      shell.openExternal(url)
+      this.openExternal(url)
     })
+  }
+
+  openExternal (url) {
+    if (!url) {
+      return
+    }
+
+    shell.openExternal(url)
   }
 
   handleConfigChange (configName) {
@@ -730,6 +783,11 @@ export default class Application extends EventEmitter {
 
     this.on('task-download-complete', (task, path) => {
       this.dockManager.openDock(path)
+
+      if (is.linux()) {
+        return
+      }
+      app.addRecentDocument(path)
     })
   }
 

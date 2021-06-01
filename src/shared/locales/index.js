@@ -7,6 +7,10 @@
  */
 export const availableLanguages = [
   {
+    value: 'ar',
+    label: 'عربي'
+  },
+  {
     value: 'bg',
     label: 'Българският език'
   },
@@ -59,6 +63,10 @@ export const availableLanguages = [
     label: '한국어'
   },
   {
+    value: 'nb',
+    label: 'Norsk Bokmål'
+  },
+  {
     value: 'pl',
     label: 'Polski'
   },
@@ -97,28 +105,33 @@ export const availableLanguages = [
 ]
 
 function checkLngIsAvailable (locale) {
-  return availableLanguages.some((lng) => lng.value === locale)
+  return availableLanguages.some(lng => lng.value === locale)
 }
 
 /**
  * getLanguage
  * @param { String } locale
- * https://electronjs.org/docs/api/locales
+ * https://www.electronjs.org/docs/api/app#appgetlocale
  *
  * Only these locales need to add a `startsWith` fallback
  * when there are with the same prefix
  *
+ * ar, ar-XB
  * de, de-AT, de-CH, de-DE
- * en, en-AU, en-CA, en-GB, en-NZ, en-US, en-ZA
- * es, es-419
+ * en, en-AU, en-CA, en-GB, en-IN, en-NZ, en-US, en-XA, en-ZA
+ * es, es-419, es-AR, es-CL, es-CO, es-CR, es-ES, es-HN, es-MX, es-PE, es-US, es-UY, es-VE
  * fr, fr-CA, fr-CH, fr-FR
  * it, it-CH, it-IT
  * pt, pt-BR, pt-PT
- * zh, zh-CN, zh-TW
+ * zh, zh-CN, zh-HK, zh-TW
  */
 export function getLanguage (locale = 'en-US') {
   if (checkLngIsAvailable(locale)) {
     return locale
+  }
+
+  if (locale.startsWith('ar')) {
+    return 'ar'
   }
 
   if (locale.startsWith('de')) {
@@ -133,17 +146,25 @@ export function getLanguage (locale = 'en-US') {
     return 'es'
   }
 
+  if (locale.startsWith('fr')) {
+    return 'fr'
+  }
+
+  if (locale.startsWith('it')) {
+    return 'it'
+  }
+
   // If there is a pt-PT translation in the future,
   // here will fallback to pt-PT.
   if (locale.startsWith('pt')) {
     return 'pt-BR'
   }
 
-  if (locale.startsWith('zh')) {
-    return 'zh-CN'
+  if (locale === 'zh-HK') {
+    return 'zh-TW'
   }
 
-  if (locale.startsWith('fr')) {
-    return 'fr'
+  if (locale.startsWith('zh')) {
+    return 'zh-CN'
   }
 }

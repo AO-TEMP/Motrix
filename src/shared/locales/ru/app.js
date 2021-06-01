@@ -1,5 +1,5 @@
 export default {
-  'task-list': 'Список заданий',
+  'task-list': 'Задачи',
   'add-task': 'Добавить задание',
   'about': 'О Motrix',
   'preferences': 'Настройки...',
@@ -23,6 +23,8 @@ export default {
   'under-development-message': 'К сожалению, эта функция все еще в разработке...',
   'yes': 'Да',
   'no': 'Нет',
+  'save': 'Сохранить',
+  'reset': 'Отмена',
   'cancel': 'Отмена',
   'submit': 'Подтвердить',
   'gt1d': '> 1 день',

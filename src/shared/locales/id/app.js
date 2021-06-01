@@ -1,5 +1,5 @@
 export default {
-  'task-list': 'Daftar Tugas',
+  'task-list': 'Tugas',
   'add-task': 'Tambah Tugas',
   'about': 'Tentang Motrix',
   'preferences': 'Preferensi...',
@@ -23,6 +23,8 @@ export default {
   'under-development-message': 'Maaf, fitur ini dalam tahap development...',
   'yes': 'Ya',
   'no': 'Tidak',
+  'save': 'Menyimpan',
+  'reset': 'Membuang',
   'cancel': 'Batal',
   'submit': 'Kirim',
   'gt1d': '> 1 hari',

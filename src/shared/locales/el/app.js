@@ -1,5 +1,5 @@
 export default {
-  'task-list': 'Λίστα Εργασιών',
+  'task-list': 'Καθήκοντα',
   'add-task': 'Προσθήκη Εργασίας',
   'about': 'Σχετικά με το Motrix',
   'preferences': 'Προτιμήσεις...',
@@ -23,6 +23,8 @@ export default {
   'under-development-message': 'Συγγνώμη, αυτή η λειτουργία είναι υπό ανάπτυξη...',
   'yes': 'Ναι',
   'no': 'Όχι',
+  'save': 'Σώσει',
+  'reset': 'Απορρίπτω',
   'cancel': 'Ακύρωση',
   'submit': 'Υποβολή',
   'gt1d': '> 1 μέρα',

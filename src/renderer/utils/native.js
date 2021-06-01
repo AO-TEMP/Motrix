@@ -1,16 +1,15 @@
 import is from 'electron-is'
+import { shell, nativeTheme } from '@electron/remote'
 import { access, constants } from 'fs'
 import { resolve } from 'path'
 import { Message } from 'element-ui'
 
 import {
-  getFileName,
+  getFileNameFromFile,
   isMagnetTask,
   getSystemMajorVersion
 } from '@shared/utils'
 import { APP_THEME, TASK_STATUS } from '@shared/constants'
-
-const remote = is.renderer() ? require('electron').remote : {}
 
 export function showItemInFolder (fullPath, { errorMsg }) {
   if (!fullPath) {
@@ -24,18 +23,16 @@ export function showItemInFolder (fullPath, { errorMsg }) {
       return
     }
 
-    remote.shell.showItemInFolder(fullPath)
+    shell.showItemInFolder(fullPath)
   })
 }
 
-export function openItem (fullPath, { errorMsg }) {
+export const openItem = async (fullPath) => {
   if (!fullPath) {
     return
   }
-  const result = remote.shell.openItem(fullPath)
-  if (!result && errorMsg) {
-    Message.error(errorMsg)
-  }
+
+  const result = await shell.openPath(fullPath)
   return result
 }
 
@@ -61,7 +58,7 @@ export function getTaskFullPath (task) {
     result = path
   } else {
     if (files && files.length === 1) {
-      fileName = getFileName(file)
+      fileName = getFileNameFromFile(file)
       if (fileName) {
         result = resolve(result, fileName)
       }
@@ -92,7 +89,9 @@ export function moveTaskFilesToTrash (task) {
   access(path, constants.F_OK, (err) => {
     console.log(`[Motrix] ${path} ${err ? 'does not exist' : 'exists'}`)
     if (!err) {
-      deleteResult1 = remote.shell.moveItemToTrash(path)
+      // Electron >= 12.x
+      // deleteResult1 = shell.trashItem(path)
+      deleteResult1 = shell.moveItemToTrash(path)
     }
   })
 
@@ -106,40 +105,13 @@ export function moveTaskFilesToTrash (task) {
   access(extraFilePath, constants.F_OK, (err) => {
     console.log(`[Motrix] ${extraFilePath} ${err ? 'does not exist' : 'exists'}`)
     if (!err) {
-      deleteResult2 = remote.shell.moveItemToTrash(extraFilePath)
+      // Electron >= 12.x
+      // deleteResult2 = shell.trashItem(extraFilePath)
+      deleteResult2 = shell.moveItemToTrash(extraFilePath)
     }
   })
 
   return deleteResult1 && deleteResult2
-}
-
-export function openDownloadDock (path) {
-  if (!is.macOS()) {
-    return
-  }
-  remote.app.dock.downloadFinished(path)
-}
-
-export function addToRecentTask (task) {
-  if (is.linux()) {
-    return
-  }
-  const path = getTaskFullPath(task)
-  remote.app.addRecentDocument(path)
-}
-
-export function addToRecentTaskByPath (path) {
-  if (is.linux()) {
-    return
-  }
-  remote.app.addRecentDocument(path)
-}
-
-export function clearRecentTasks () {
-  if (is.linux()) {
-    return
-  }
-  remote.app.clearRecentDocuments()
 }
 
 export function getSystemTheme () {
@@ -147,20 +119,12 @@ export function getSystemTheme () {
   if (!is.macOS()) {
     return result
   }
-  result = remote.nativeTheme.shouldUseDarkColors ? APP_THEME.DARK : APP_THEME.LIGHT
+  result = nativeTheme.shouldUseDarkColors ? APP_THEME.DARK : APP_THEME.LIGHT
   return result
 }
 
 export function isBigSur () {
   return is.macOS() && getSystemMajorVersion() >= 20
-}
-
-export const openExternal = (url, options) => {
-  if (!url) {
-    return
-  }
-
-  remote.shell.openExternal(url, options)
 }
 
 export const delayDeleteTaskFiles = (task, delay) => {

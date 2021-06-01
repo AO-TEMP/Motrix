@@ -9,11 +9,10 @@ import {
   IP_VERSION
 } from '@shared/constants'
 
-import logger from '../core/Logger'
 import engineBinMap from '../configs/engine'
 
 export function getLogPath () {
-  return logger.transports.file.file
+  return app.getPath('logs')
 }
 
 export function getDhtPath (protocol) {
@@ -23,6 +22,10 @@ export function getDhtPath (protocol) {
 
 export function getSessionPath () {
   return resolve(app.getPath('userData'), './download.session')
+}
+
+export function getEnginePidPath () {
+  return resolve(app.getPath('userData'), './engine.pid')
 }
 
 export function getUserDataPath () {

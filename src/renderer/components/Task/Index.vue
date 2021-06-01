@@ -33,6 +33,7 @@
 </template>
 
 <script>
+  import { dialog } from '@electron/remote'
   import { mapState } from 'vuex'
   import * as clipboard from 'clipboard-polyfill'
 
@@ -170,35 +171,33 @@
             return this.removeTaskRecordItem(task, taskName)
           })
       },
-      removeTaskItem (task, taskName) {
-        return this.$store.dispatch('task/removeTask', task)
-          .then(() => {
-            this.$msg.success(this.$t('task.delete-task-success', {
+      async removeTaskItem (task, taskName) {
+        try {
+          await this.$store.dispatch('task/removeTask', task)
+          this.$msg.success(this.$t('task.delete-task-success', {
+            taskName
+          }))
+        } catch ({ code }) {
+          if (code === 1) {
+            this.$msg.error(this.$t('task.delete-task-fail', {
               taskName
             }))
-          })
-          .catch(({ code }) => {
-            if (code === 1) {
-              this.$msg.error(this.$t('task.delete-task-fail', {
-                taskName
-              }))
-            }
-          })
+          }
+        }
       },
-      removeTaskRecordItem (task, taskName) {
-        return this.$store.dispatch('task/removeTaskRecord', task)
-          .then(() => {
-            this.$msg.success(this.$t('task.remove-record-success', {
+      async removeTaskRecordItem (task, taskName) {
+        try {
+          await this.$store.dispatch('task/removeTaskRecord', task)
+          this.$msg.success(this.$t('task.remove-record-success', {
+            taskName
+          }))
+        } catch ({ code }) {
+          if (code === 1) {
+            this.$msg.error(this.$t('task.remove-record-fail', {
               taskName
             }))
-          })
-          .catch(({ code }) => {
-            if (code === 1) {
-              this.$msg.error(this.$t('task.remove-record-fail', {
-                taskName
-              }))
-            }
-          })
+          }
+        }
       },
       removeTasks (taskList, isRemoveWithFiles = false) {
         const gids = taskList.map((task) => task.gid)
@@ -296,7 +295,7 @@
           return
         }
 
-        this.$electron.remote.dialog.showMessageBox({
+        dialog.showMessageBox({
           type: 'warning',
           title: this.$t('task.delete-task'),
           message: this.$t('task.delete-task-confirm', { taskName }),
@@ -319,7 +318,7 @@
           return
         }
 
-        this.$electron.remote.dialog.showMessageBox({
+        dialog.showMessageBox({
           type: 'warning',
           title: this.$t('task.remove-record'),
           message: this.$t('task.remove-record-confirm', { taskName }),
@@ -355,7 +354,7 @@
         }
 
         const count = `${selectedGidListCount}`
-        this.$electron.remote.dialog.showMessageBox({
+        dialog.showMessageBox({
           type: 'warning',
           title: this.$t('task.delete-selected-task'),
           message: this.$t('task.batch-delete-task-confirm', { count }),
@@ -379,7 +378,7 @@
       },
       handleShowTaskInfo (payload) {
         const { task } = payload
-        this.$store.dispatch('task/showTaskItemInfoDialog', task)
+        this.$store.dispatch('task/showTaskDetail', task)
       }
     },
     created () {
@@ -411,6 +410,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-</style>

@@ -16,6 +16,7 @@
 </template>
 
 <script>
+  import { getCurrentWindow } from '@electron/remote'
   import '@/components/Icons/win-minimize'
   import '@/components/Icons/win-maximize'
   import '@/components/Icons/win-close'
@@ -29,7 +30,7 @@
     },
     computed: {
       win () {
-        return this.$electron.remote.getCurrentWindow()
+        return getCurrentWindow()
       }
     },
     methods: {
@@ -61,6 +62,7 @@
   height: 36px;
   z-index: 5000;
   .title-bar-dragger {
+    margin: 5px 0 0 5px;
     flex: 1;
     user-select: none;
     -webkit-app-region: drag;

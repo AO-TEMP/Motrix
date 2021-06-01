@@ -9,7 +9,7 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const ESLintPlugin = require('eslint-webpack-plugin');
@@ -137,34 +137,18 @@ let webConfig = {
       filename: '[name].css',
       chunkFilename: '[id].css'
     }),
-    new OptimizeCSSPlugin({
-      cssProcessorOptions: {
-        safe: true,
-        discardComments: { removeAll: true }
-      }
-    }),
     new HtmlWebpackPlugin({
       title: 'Motrix',
       filename: 'index.html',
       chunks: ['index'],
       template: path.resolve(__dirname, '../src/index.ejs'),
-      templateParameters(compilation, assets, options) {
-        return {
-          compilation: compilation,
-          webpack: compilation.getStats().toJson(),
-          webpackConfig: compilation.options,
-          htmlWebpackPlugin: {
-            files: assets,
-            options: options
-          },
-          process
-        }
-      },
       // minify: {
       //   collapseWhitespace: true,
       //   removeAttributeQuotes: true,
       //   removeComments: true
       // },
+      isBrowser: true,
+      isDev: process.env.NODE_ENV !== 'production',
       nodeModules: devMode
         ? path.resolve(__dirname, '../node_modules')
         : false
@@ -199,7 +183,8 @@ let webConfig = {
     minimizer: [
       new TerserPlugin({
         extractComments: false,
-      })
+      }),
+      new CssMinimizerPlugin(),
     ],
   },
 }

@@ -1,5 +1,5 @@
 <template>
-  <el-aside width="78px" :class="['aside', 'hidden-sm-and-down', { 'draggable': asideDraggable }]">
+  <el-aside width="78px" :class="['aside', 'hidden-sm-and-down', { 'draggable': asideDraggable }]" :style="vibrancy">
     <div class="aside-inner">
       <mo-logo-mini />
       <ul class="menu top-menu">
@@ -43,6 +43,13 @@
       }),
       asideDraggable () {
         return is.macOS()
+      },
+      vibrancy () {
+        return is.macOS()
+          ? {
+            backgroundColor: 'transparent'
+          }
+          : {}
       }
     },
     methods: {
@@ -64,40 +71,40 @@
 </script>
 
 <style lang="scss">
-  .aside-inner {
-    display: flex;
-    height: 100%;
-    flex-flow: column;
-  }
-  .logo-mini {
-    margin-top: 40px;
-  }
-  .menu {
-    list-style: none;
-    padding: 0;
-    margin: 0 auto;
-    user-select: none;
-    cursor: default;
-    > li {
-      width: 32px;
-      height: 32px;
-      margin-top: 24px;
-      cursor: pointer;
-      border-radius: 16px;
-      transition: background-color 0.25s;
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-      }
-    }
-    svg {
-      padding: 6px;
-      color: #fff;
+.aside-inner {
+  display: flex;
+  height: 100%;
+  flex-flow: column;
+}
+.logo-mini {
+  margin-top: 40px;
+}
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  user-select: none;
+  cursor: default;
+  > li {
+    width: 32px;
+    height: 32px;
+    margin-top: 24px;
+    cursor: pointer;
+    border-radius: 16px;
+    transition: background-color 0.25s;
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15);
     }
   }
-  .top-menu {
-    flex: 1;
+  svg {
+    padding: 6px;
+    color: #fff;
   }
-  .bottom-menu {
-    margin-bottom: 24px;
-  }
+}
+.top-menu {
+  flex: 1;
+}
+.bottom-menu {
+  margin-bottom: 24px;
+}
 </style>

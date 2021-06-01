@@ -1,5 +1,5 @@
 export default {
-  'task-list': 'Feladat lista',
+  'task-list': 'Feladatok',
   'add-task': 'Feladat hozzáadasa',
   'about': 'Motrix névjegye',
   'preferences': 'Beálittasok...',
@@ -23,6 +23,8 @@ export default {
   'under-development-message': 'Sájnaljuk, de ez a funkció feljesztés allat...',
   'yes': 'Igen',
   'no': 'Nem',
+  'save': 'Mentés',
+  'reset': 'Eldobni',
   'cancel': 'Mégse',
   'submit': 'Beküldés',
   'gt1d': '> 1 nap',
